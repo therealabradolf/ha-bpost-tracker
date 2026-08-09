@@ -113,8 +113,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
 
+    # Deliberately not checked immediately: a freshly added shipment that
+    # already happens to be past the removal threshold should still show up
+    # at least once, not vanish before the user ever sees it. The listener
+    # below covers it from the next coordinator refresh onwards.
     entry.async_on_unload(coordinator.async_add_listener(check_auto_remove))
-    check_auto_remove()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
