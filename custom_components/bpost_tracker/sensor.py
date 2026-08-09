@@ -62,6 +62,12 @@ class BpostShipmentStatusSensor(CoordinatorEntity[BpostShipmentCoordinator], Sen
         events = item.get("events") or []
         latest_event = events[0] if events else {}
         description = ((latest_event.get("key") or {}).get(lang) or {}).get("description")
+        status_date = latest_event.get("date")
+        status_time = latest_event.get("time")
+
+        status_label = (((item.get("activeStep") or {}).get("label") or {}).get("main") or {}).get(
+            lang
+        )
 
         delivery_range = item.get("expectedDeliveryTimeRange") or {}
         sender = item.get("senderCommercialName") or (item.get("sender") or {}).get("name")
@@ -69,9 +75,11 @@ class BpostShipmentStatusSensor(CoordinatorEntity[BpostShipmentCoordinator], Sen
         attributes: dict[str, Any] = {
             "tracking_number": self._entry.data[CONF_TRACKING_NUMBER],
             "postal_code": self._entry.data[CONF_POSTAL_CODE],
+            "status_label": status_label,
             "status_description": description,
-            "status_time": latest_event.get("time"),
+            "status_time": f"{status_date} {status_time}" if status_date and status_time else None,
             "sender": sender,
+            "delivered": self.data.is_delivered,
         }
 
         if delivery_range:

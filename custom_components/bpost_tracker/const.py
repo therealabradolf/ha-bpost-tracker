@@ -13,7 +13,5 @@ CONF_POSTAL_CODE = "postal_code"
 UPDATE_INTERVAL_ACTIVE = timedelta(minutes=15)
 UPDATE_INTERVAL_DELIVERED = timedelta(hours=6)
 
-STATUS_DELIVERED = "delivered"
-
 SUPPORTED_LANGUAGES = ("NL", "FR", "EN")
 DEFAULT_LANGUAGE = "EN"

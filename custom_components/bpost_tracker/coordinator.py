@@ -9,13 +9,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import BpostApiClient, BpostItemNotFoundError
-from .const import (
-    DOMAIN,
-    LOGGER,
-    STATUS_DELIVERED,
-    UPDATE_INTERVAL_ACTIVE,
-    UPDATE_INTERVAL_DELIVERED,
-)
+from .const import DOMAIN, LOGGER, UPDATE_INTERVAL_ACTIVE, UPDATE_INTERVAL_DELIVERED
+
+
+def _is_delivered(item: dict[str, Any]) -> bool:
+    """Whether bpost recorded an actual delivery.
+
+    bpost uses many different activeStep.name values depending on the
+    delivery method (e.g. "delivered_kariboo_point" for pickup points, vs
+    plain "delivered" for a mailbox drop), so that field alone is not a
+    reliable "is delivered" check. The presence of an actual delivery time
+    is.
+    """
+    return bool((item.get("actualDeliveryInformation") or {}).get("actualDeliveryTime"))
 
 
 @dataclass
@@ -31,7 +37,7 @@ class BpostShipmentData:
 
     @property
     def is_delivered(self) -> bool:
-        return self.active_step == STATUS_DELIVERED
+        return _is_delivered(self.item)
 
 
 class BpostShipmentCoordinator(DataUpdateCoordinator[BpostShipmentData]):
@@ -62,15 +68,14 @@ class BpostShipmentCoordinator(DataUpdateCoordinator[BpostShipmentData]):
         except aiohttp.ClientError as err:
             raise UpdateFailed(f"Error communicating with bpost: {err}") from err
 
+        delivered = _is_delivered(item)
+
         stops_left = None
-        active_step = (item.get("activeStep") or {}).get("name")
-        if active_step != STATUS_DELIVERED and "expectedDeliveryTimeRange" in item:
+        if not delivered and "expectedDeliveryTimeRange" in item:
             stops_left = await self.client.async_get_stops_until_target(
                 self.tracking_number, self.postal_code
             )
 
-        self.update_interval = (
-            UPDATE_INTERVAL_DELIVERED if active_step == STATUS_DELIVERED else UPDATE_INTERVAL_ACTIVE
-        )
+        self.update_interval = UPDATE_INTERVAL_DELIVERED if delivered else UPDATE_INTERVAL_ACTIVE
 
         return BpostShipmentData(item=item, stops_left=stops_left)
