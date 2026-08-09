@@ -5,6 +5,13 @@ Track any bpost shipment in Home Assistant using just its **tracking number
 [bpost track & trace website](https://track.bpost.cloud). No bpost account
 needed.
 
+Add as many shipments as you like — each gets its own status sensor (and a
+delivery-picture camera when bpost provides one). New shipments can be added
+through the normal Home Assistant UI, or straight from a dashboard using the
+integration's own `add_shipment` service. An `auto-entities` card can keep a
+dashboard showing every tracked shipment automatically, with no manual
+editing every time you add one.
+
 ## ⚠️ Disclaimer
 
 This integration talks to the **public, unauthenticated JSON API** that
@@ -41,7 +48,11 @@ risk. If it breaks, please open an issue.
 Copy `custom_components/bpost_tracker` into your Home Assistant
 `custom_components` folder and restart Home Assistant.
 
-## Adding a shipment
+## Usage
+
+There are three ways to add a shipment, from least to most setup required.
+
+### Option A: the standard Home Assistant UI
 
 1. Go to **Settings → Devices & Services → Add Integration**.
 2. Search for **Bpost Tracker**.
@@ -53,16 +64,36 @@ Copy `custom_components/bpost_tracker` into your Home Assistant
 To stop tracking a shipment, remove its entry under **Settings → Devices &
 Services**.
 
-## Adding a shipment from a dashboard
+### Option B: a dashboard button that jumps to that same form
 
-The integration also exposes a `bpost_tracker.add_shipment` service
-(`tracking_number`, `postal_code`, optional `name`), so you can add
-shipments without leaving a dashboard. A simple way to wire it up:
+No integration code needed for this — Home Assistant can deep-link straight
+into the "Add integration" form for a specific integration, skipping the
+search step. Add this card to a dashboard:
+
+```yaml
+type: button
+name: Add new shipment
+icon: mdi:package-variant-plus
+tap_action:
+  action: url
+  url_path: https://my.home-assistant.io/redirect/config_flow_start/?domain=bpost_tracker
+```
+
+You'll still need to type in the tracking number and postal code yourself —
+this just removes the search step.
+
+### Option C: fill in and submit from the dashboard itself, no popup
+
+The integration exposes a `bpost_tracker.add_shipment` service
+(fields: `tracking_number`, `postal_code`, optional `name`) so a whole
+"add shipment" form can live directly on a dashboard:
 
 1. Create three `input_text` helpers (**Settings → Devices & Services →
-   Helpers**): one each for tracking number, postal code, and name.
-2. Create a script that calls `bpost_tracker.add_shipment` with those
-   helpers' values, then clears them:
+   Helpers → Add helper → Text**): one each for tracking number, postal
+   code, and name.
+2. Create a script (**Settings → Automations & Scenes → Scripts**) that
+   calls `bpost_tracker.add_shipment` with those helpers' values, then
+   clears them:
 
    ```yaml
    sequence:
@@ -89,24 +120,33 @@ shipments without leaving a dashboard. A simple way to wire it up:
    ```
 
 3. Add an **entities** card with the three helpers and the script — tapping
-   the script's icon runs it.
+   the script's row runs it.
 
 If the tracking number/postal code combination is invalid, the service call
-fails with an error (shown in Home Assistant's UI / logs) instead of
-silently doing nothing.
+fails with a visible error instead of silently doing nothing, and no
+shipment gets added.
 
-Prefer not to build any of that? A single dashboard button can jump
-straight to the normal "Add integration" form instead, skipping the search
-step:
+## Viewing all your shipments on a dashboard
+
+Rather than adding each new shipment's sensor to a dashboard by hand, use
+the [auto-entities](https://github.com/thomasloven/lovelace-auto-entities)
+custom card (available in HACS) to have a card populate itself:
 
 ```yaml
-type: button
-name: Nieuw pakje toevoegen
-icon: mdi:package-variant-plus
-tap_action:
-  action: url
-  url_path: https://my.home-assistant.io/redirect/config_flow_start/?domain=bpost_tracker
+type: custom:auto-entities
+card:
+  type: entities
+  title: Bpost shipments
+filter:
+  include:
+    - integration: bpost_tracker
+      domain: sensor
+sort:
+  method: state
 ```
+
+Add a second card the same way with `domain: camera` instead of `sensor` to
+show delivery pictures automatically.
 
 ## Known limitations
 
