@@ -153,6 +153,47 @@ sort:
 Add a second card the same way with `domain: camera` instead of `sensor` to
 show delivery pictures automatically.
 
+### Making a tile open the bpost tracking page directly
+
+bpost's tracker supports a deep link that opens a specific shipment directly:
+
+```
+https://track.bpost.cloud/btr/web/#/search?lang=nl&itemCode=<tracking_number>&postalCode=<postal_code>
+```
+
+Since a card's `tap_action` can't contain a live template, build the tiles
+with `auto-entities`' `template` filter instead of `include`, so the URL is
+computed once per entity when the card renders:
+
+```yaml
+type: custom:auto-entities
+card:
+  type: grid
+  columns: 2
+  square: false
+card_param: cards
+filter:
+  template: >
+    [
+    {% for entity_id in integration_entities('bpost_tracker') if entity_id.startswith('sensor.') %}
+    {
+      "entity": "{{ entity_id }}",
+      "type": "tile",
+      "tap_action": {
+        "action": "url",
+        "url_path": "https://track.bpost.cloud/btr/web/#/search?lang=nl&itemCode={{ state_attr(entity_id, 'tracking_number') }}&postalCode={{ state_attr(entity_id, 'postal_code') }}"
+      },
+      "hold_action": {"action": "more-info"}
+    }{{ "," if not loop.last }}
+    {% endfor %}
+    ]
+sort:
+  method: state
+```
+
+Tapping a tile opens that shipment's bpost tracking page in a new tab;
+long-pressing still shows the normal Home Assistant more-info dialog.
+
 ## Known limitations
 
 - bpost's `activeStep` status codes are not officially documented, so the
