@@ -1,0 +1,12 @@
+{
+  "domain": "bpost_tracker",
+  "name": "Bpost Tracker",
+  "codeowners": ["@therealabradolf"],
+  "config_flow": true,
+  "documentation": "https://github.com/therealabradolf/ha-bpost-tracker",
+  "issue_tracker": "https://github.com/therealabradolf/ha-bpost-tracker/issues",
+  "iot_class": "cloud_polling",
+  "integration_type": "service",
+  "requirements": [],
+  "version": "0.1.0"
+}

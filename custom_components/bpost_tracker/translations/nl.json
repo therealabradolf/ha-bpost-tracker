@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Voer het trackingnummer (barcode) en de postcode in, net zoals op de bpost track & trace website.",
+        "data": {
+          "tracking_number": "Trackingnummer",
+          "postal_code": "Postcode",
+          "name": "Naam (optioneel)"
+        }
+      }
+    },
+    "error": {
+      "not_found": "bpost heeft geen gegevens voor deze combinatie van trackingnummer en postcode.",
+      "cannot_connect": "Kon geen verbinding maken met de bpost tracking-service."
+    },
+    "abort": {
+      "already_configured": "Deze zending wordt al gevolgd."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "camera": {
+      "safeplace_picture": {
+        "name": "Leveringsfoto"
+      }
+    }
+  }
+}

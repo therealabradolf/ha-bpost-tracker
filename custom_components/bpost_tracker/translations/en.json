@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter the tracking number (barcode) and postal code exactly as you would on the bpost track & trace website.",
+        "data": {
+          "tracking_number": "Tracking number",
+          "postal_code": "Postal code",
+          "name": "Name (optional)"
+        }
+      }
+    },
+    "error": {
+      "not_found": "bpost has no data for this tracking number and postal code combination.",
+      "cannot_connect": "Could not reach the bpost tracking service."
+    },
+    "abort": {
+      "already_configured": "This shipment is already being tracked."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "camera": {
+      "safeplace_picture": {
+        "name": "Delivery picture"
+      }
+    }
+  }
+}
