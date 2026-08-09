@@ -22,3 +22,14 @@ add_shipment:
       required: false
       selector:
         text:
+    remove_after_days:
+      name: Remove after days
+      description: >-
+        Automatically remove this shipment this many days after it's
+        delivered. 0 (or omitted) means never. Defaults to 10 if omitted.
+      required: false
+      example: 10
+      selector:
+        number:
+          min: 0
+          mode: box

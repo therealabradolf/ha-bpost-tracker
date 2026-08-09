@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date, datetime
 from typing import Any
 
 import aiohttp
@@ -38,6 +39,20 @@ class BpostShipmentData:
     @property
     def is_delivered(self) -> bool:
         return _is_delivered(self.item)
+
+    @property
+    def delivered_date(self) -> date | None:
+        """The calendar date bpost recorded as the actual delivery, if any."""
+        delivery_time = (self.item.get("actualDeliveryInformation") or {}).get(
+            "actualDeliveryTime"
+        ) or {}
+        day = delivery_time.get("day")
+        if not day:
+            return None
+        try:
+            return datetime.strptime(day, "%Y-%m-%d").date()
+        except ValueError:
+            return None
 
 
 class BpostShipmentCoordinator(DataUpdateCoordinator[BpostShipmentData]):

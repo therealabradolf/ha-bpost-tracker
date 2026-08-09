@@ -6,7 +6,8 @@
         "data": {
           "tracking_number": "Trackingnummer",
           "postal_code": "Postcode",
-          "name": "Naam (optioneel)"
+          "name": "Naam (optioneel)",
+          "remove_after_days": "Automatisch verwijderen na dit aantal dagen na levering (0 = nooit)"
         }
       }
     },
@@ -16,6 +17,16 @@
     },
     "abort": {
       "already_configured": "Deze zending wordt al gevolgd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Kies wanneer deze zending automatisch verwijderd moet worden na levering.",
+        "data": {
+          "remove_after_days": "Automatisch verwijderen na dit aantal dagen na levering (0 = nooit)"
+        }
+      }
     }
   },
   "entity": {

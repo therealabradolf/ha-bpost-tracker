@@ -33,6 +33,10 @@ risk. If it breaks, please open an issue.
   courier left the parcel without a signature and bpost has a photo for it.
 - Polling slows down automatically (every 6 hours instead of every 15
   minutes) once a shipment is marked as delivered.
+- Shipments can be removed automatically a configurable number of days after
+  delivery (10 days by default, 0 to disable) — set when adding a shipment,
+  or changed later via the entry's **Configure** button under
+  **Settings → Devices & Services**.
 
 ## Installation
 
@@ -85,8 +89,9 @@ this just removes the search step.
 ### Option C: fill in and submit from the dashboard itself, no popup
 
 The integration exposes a `bpost_tracker.add_shipment` service
-(fields: `tracking_number`, `postal_code`, optional `name`) so a whole
-"add shipment" form can live directly on a dashboard:
+(fields: `tracking_number`, `postal_code`, optional `name`, optional
+`remove_after_days`) so a whole "add shipment" form can live directly on a
+dashboard:
 
 1. Create three `input_text` helpers (**Settings → Devices & Services →
    Helpers → Add helper → Text**): one each for tracking number, postal

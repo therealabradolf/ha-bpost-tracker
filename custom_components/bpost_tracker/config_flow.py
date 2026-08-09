@@ -5,18 +5,28 @@ from typing import Any
 
 import aiohttp
 import voluptuous as vol
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import BpostApiClient, BpostItemNotFoundError
-from .const import CONF_POSTAL_CODE, CONF_TRACKING_NUMBER, DOMAIN
+from .const import (
+    CONF_POSTAL_CODE,
+    CONF_REMOVE_AFTER_DAYS,
+    CONF_TRACKING_NUMBER,
+    DEFAULT_REMOVE_AFTER_DAYS,
+    DOMAIN,
+)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TRACKING_NUMBER): str,
         vol.Required(CONF_POSTAL_CODE): str,
         vol.Optional("name"): str,
+        vol.Optional(
+            CONF_REMOVE_AFTER_DAYS, default=DEFAULT_REMOVE_AFTER_DAYS
+        ): vol.All(vol.Coerce(int), vol.Range(min=0)),
     }
 )
 
@@ -50,12 +60,16 @@ class BpostTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 title = user_input.get("name") or tracking_number
+                remove_after_days = user_input.get(
+                    CONF_REMOVE_AFTER_DAYS, DEFAULT_REMOVE_AFTER_DAYS
+                )
                 return self.async_create_entry(
                     title=title,
                     data={
                         CONF_TRACKING_NUMBER: tracking_number,
                         CONF_POSTAL_CODE: postal_code,
                     },
+                    options={CONF_REMOVE_AFTER_DAYS: remove_after_days},
                 )
 
         return self.async_show_form(
@@ -63,3 +77,31 @@ class BpostTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> BpostTrackerOptionsFlow:
+        """Get the options flow for this handler."""
+        return BpostTrackerOptionsFlow()
+
+
+class BpostTrackerOptionsFlow(OptionsFlow):
+    """Let the auto-removal delay be changed after a shipment was added."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_REMOVE_AFTER_DAYS,
+                    default=self.config_entry.options.get(
+                        CONF_REMOVE_AFTER_DAYS, DEFAULT_REMOVE_AFTER_DAYS
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

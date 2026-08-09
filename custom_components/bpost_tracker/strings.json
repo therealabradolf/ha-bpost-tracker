@@ -6,7 +6,8 @@
         "data": {
           "tracking_number": "Tracking number",
           "postal_code": "Postal code",
-          "name": "Name (optional)"
+          "name": "Name (optional)",
+          "remove_after_days": "Remove automatically after this many days once delivered (0 = never)"
         }
       }
     },
@@ -16,6 +17,16 @@
     },
     "abort": {
       "already_configured": "This shipment is already being tracked."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Choose when this shipment should be removed automatically after delivery.",
+        "data": {
+          "remove_after_days": "Remove automatically after this many days once delivered (0 = never)"
+        }
+      }
     }
   },
   "entity": {
