@@ -1,0 +1,24 @@
+add_shipment:
+  name: Add shipment
+  description: Track a new bpost shipment by tracking number and postal code.
+  fields:
+    tracking_number:
+      name: Tracking number
+      description: The bpost tracking number (barcode).
+      required: true
+      example: "CA588756303DE"
+      selector:
+        text:
+    postal_code:
+      name: Postal code
+      description: The destination postal code.
+      required: true
+      example: "2830"
+      selector:
+        text:
+    name:
+      name: Name
+      description: Optional friendly name for this shipment.
+      required: false
+      selector:
+        text:
