@@ -17,6 +17,8 @@ from .coordinator import BpostShipmentCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.CAMERA]
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 SERVICE_ADD_SHIPMENT = "add_shipment"
 SERVICE_ADD_SHIPMENT_SCHEMA = vol.Schema(
     {
