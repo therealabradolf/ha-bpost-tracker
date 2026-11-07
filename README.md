@@ -65,6 +65,10 @@ There are three ways to add a shipment, from least to most setup required.
 4. Repeat for each shipment you want to track — each one is added as a
    separate integration entry/device.
 
+Input is normalised and checked before anything is stored: the tracking
+number must be 8–40 letters/digits (case and spaces are ignored), the postal
+code 3–10 characters, and the name at most 100 characters.
+
 To stop tracking a shipment, remove its entry under **Settings → Devices &
 Services**.
 
@@ -91,7 +95,8 @@ this just removes the search step.
 The integration exposes a `bpost_tracker.add_shipment` service
 (fields: `tracking_number`, `postal_code`, optional `name`, optional
 `remove_after_days`) so a whole "add shipment" form can live directly on a
-dashboard:
+dashboard. Like the UI flow, the service **requires an administrator**: a
+script that a non-admin user triggers will fail with a permission error.
 
 1. Create three `input_text` helpers (**Settings → Devices & Services →
    Helpers → Add helper → Text**): one each for tracking number, postal
@@ -181,7 +186,7 @@ filter:
       "type": "tile",
       "tap_action": {
         "action": "url",
-        "url_path": "https://track.bpost.cloud/btr/web/#/search?lang=nl&itemCode={{ state_attr(entity_id, 'tracking_number') }}&postalCode={{ state_attr(entity_id, 'postal_code') }}"
+        "url_path": "https://track.bpost.cloud/btr/web/#/search?lang=nl&itemCode={{ state_attr(entity_id, 'tracking_number') | urlencode }}&postalCode={{ state_attr(entity_id, 'postal_code') | urlencode }}"
       },
       "hold_action": {"action": "more-info"}
     }{{ "," if not loop.last }}
@@ -193,6 +198,10 @@ sort:
 
 Tapping a tile opens that shipment's bpost tracking page in a new tab;
 long-pressing still shows the normal Home Assistant more-info dialog.
+
+Keep the `| urlencode` filters: the template builds JSON by string
+concatenation, so a value containing a backslash or quote would otherwise
+break the whole card for every shipment.
 
 ## Known limitations
 

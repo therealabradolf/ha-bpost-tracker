@@ -9,6 +9,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -22,6 +23,7 @@ from .const import (
     LOGGER,
 )
 from .coordinator import BpostShipmentCoordinator
+from .validation import MAX_NAME_LENGTH
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.CAMERA]
 
@@ -32,7 +34,7 @@ SERVICE_ADD_SHIPMENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TRACKING_NUMBER): cv.string,
         vol.Required(CONF_POSTAL_CODE): cv.string,
-        vol.Optional("name"): cv.string,
+        vol.Optional("name"): vol.All(cv.string, vol.Length(max=MAX_NAME_LENGTH)),
         vol.Optional(CONF_REMOVE_AFTER_DAYS): vol.All(vol.Coerce(int), vol.Range(min=0)),
     }
 )
@@ -67,10 +69,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # waiting for the next step. We won't call it again, so close it out.
         errors = result.get("errors") or {}
         hass.config_entries.flow.async_abort(result["flow_id"])
-        raise HomeAssistantError(f"Could not add bpost shipment: {errors.get('base', 'unknown')}")
+        reason = ", ".join(errors.values()) or "unknown"
+        raise HomeAssistantError(f"Could not add bpost shipment: {reason}")
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_SHIPMENT, async_handle_add_shipment, schema=SERVICE_ADD_SHIPMENT_SCHEMA
+    # Creating a config entry is an administrative action (the UI flow needs an
+    # admin too), so this service must not be callable by regular users.
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_ADD_SHIPMENT,
+        async_handle_add_shipment,
+        schema=SERVICE_ADD_SHIPMENT_SCHEMA,
     )
     return True
 

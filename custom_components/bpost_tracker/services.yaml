@@ -1,10 +1,14 @@
 add_shipment:
   name: Add shipment
-  description: Track a new bpost shipment by tracking number and postal code.
+  description: >-
+    Track a new bpost shipment by tracking number and postal code.
+    Requires an administrator.
   fields:
     tracking_number:
       name: Tracking number
-      description: The bpost tracking number (barcode).
+      description: >-
+        The bpost tracking number (barcode): 8-40 letters/digits, case and
+        spaces are ignored.
       required: true
       example: "CA588756303DE"
       selector:
@@ -18,7 +22,7 @@ add_shipment:
         text:
     name:
       name: Name
-      description: Optional friendly name for this shipment.
+      description: Optional friendly name for this shipment (max 100 characters).
       required: false
       selector:
         text:

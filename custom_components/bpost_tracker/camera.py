@@ -37,6 +37,10 @@ class BpostSafeplaceCamera(CoordinatorEntity[BpostShipmentCoordinator], Camera):
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_safeplace_picture"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry.entry_id)})
+        # A delivered parcel's picture never changes, so fetch it once per
+        # refId instead of hitting bpost on every frontend request.
+        self._image_ref_id: str | None = None
+        self._image: bytes | None = None
 
     def _ref_id(self) -> str | None:
         item = self.coordinator.data.item
@@ -54,4 +58,12 @@ class BpostSafeplaceCamera(CoordinatorEntity[BpostShipmentCoordinator], Camera):
         ref_id = self._ref_id()
         if ref_id is None:
             return None
-        return await self.coordinator.client.async_get_safeplace_picture(ref_id)
+
+        if ref_id != self._image_ref_id or self._image is None:
+            image = await self.coordinator.client.async_get_safeplace_picture(ref_id)
+            if image is None:
+                return None
+            self._image_ref_id = ref_id
+            self._image = image
+
+        return self._image

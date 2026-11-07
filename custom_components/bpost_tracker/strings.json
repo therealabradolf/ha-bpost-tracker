@@ -12,6 +12,8 @@
       }
     },
     "error": {
+      "invalid_tracking_number": "Enter a valid tracking number: 8-40 letters/digits (spaces are ignored).",
+      "invalid_postal_code": "Enter a valid postal code (3-10 characters, e.g. 2830).",
       "not_found": "bpost has no data for this tracking number and postal code combination.",
       "cannot_connect": "Could not reach the bpost tracking service."
     },

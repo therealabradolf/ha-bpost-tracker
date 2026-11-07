@@ -18,12 +18,19 @@ from .const import (
     DEFAULT_REMOVE_AFTER_DAYS,
     DOMAIN,
 )
+from .validation import (
+    MAX_NAME_LENGTH,
+    is_valid_postal_code,
+    is_valid_tracking_number,
+    normalize_postal_code,
+    normalize_tracking_number,
+)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TRACKING_NUMBER): str,
         vol.Required(CONF_POSTAL_CODE): str,
-        vol.Optional("name"): str,
+        vol.Optional("name"): vol.All(str, vol.Length(max=MAX_NAME_LENGTH)),
         vol.Optional(
             CONF_REMOVE_AFTER_DAYS, default=DEFAULT_REMOVE_AFTER_DAYS
         ): vol.All(vol.Coerce(int), vol.Range(min=0)),
@@ -43,34 +50,42 @@ class BpostTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            tracking_number = user_input[CONF_TRACKING_NUMBER].strip()
-            postal_code = user_input[CONF_POSTAL_CODE].strip()
+            tracking_number = normalize_tracking_number(user_input[CONF_TRACKING_NUMBER])
+            postal_code = normalize_postal_code(user_input[CONF_POSTAL_CODE])
 
-            await self.async_set_unique_id(f"{tracking_number}_{postal_code}")
-            self._abort_if_unique_id_configured()
+            # bpost accepts almost any junk around a real barcode, so a
+            # successful lookup is no proof of clean input: validate first.
+            if not is_valid_tracking_number(tracking_number):
+                errors[CONF_TRACKING_NUMBER] = "invalid_tracking_number"
+            if not is_valid_postal_code(postal_code):
+                errors[CONF_POSTAL_CODE] = "invalid_postal_code"
 
-            session = async_get_clientsession(self.hass)
-            client = BpostApiClient(session)
+            if not errors:
+                await self.async_set_unique_id(f"{tracking_number}_{postal_code}")
+                self._abort_if_unique_id_configured()
 
-            try:
-                await client.async_get_item(tracking_number, postal_code)
-            except BpostItemNotFoundError:
-                errors["base"] = "not_found"
-            except aiohttp.ClientError:
-                errors["base"] = "cannot_connect"
-            else:
-                title = user_input.get("name") or tracking_number
-                remove_after_days = user_input.get(
-                    CONF_REMOVE_AFTER_DAYS, DEFAULT_REMOVE_AFTER_DAYS
-                )
-                return self.async_create_entry(
-                    title=title,
-                    data={
-                        CONF_TRACKING_NUMBER: tracking_number,
-                        CONF_POSTAL_CODE: postal_code,
-                    },
-                    options={CONF_REMOVE_AFTER_DAYS: remove_after_days},
-                )
+                session = async_get_clientsession(self.hass)
+                client = BpostApiClient(session)
+
+                try:
+                    await client.async_get_item(tracking_number, postal_code)
+                except BpostItemNotFoundError:
+                    errors["base"] = "not_found"
+                except (aiohttp.ClientError, TimeoutError):
+                    errors["base"] = "cannot_connect"
+                else:
+                    title = user_input.get("name") or tracking_number
+                    remove_after_days = user_input.get(
+                        CONF_REMOVE_AFTER_DAYS, DEFAULT_REMOVE_AFTER_DAYS
+                    )
+                    return self.async_create_entry(
+                        title=title,
+                        data={
+                            CONF_TRACKING_NUMBER: tracking_number,
+                            CONF_POSTAL_CODE: postal_code,
+                        },
+                        options={CONF_REMOVE_AFTER_DAYS: remove_after_days},
+                    )
 
         return self.async_show_form(
             step_id="user",

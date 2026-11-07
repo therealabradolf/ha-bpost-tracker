@@ -80,7 +80,7 @@ class BpostShipmentCoordinator(DataUpdateCoordinator[BpostShipmentData]):
             item = await self.client.async_get_item(self.tracking_number, self.postal_code)
         except BpostItemNotFoundError as err:
             raise UpdateFailed(f"bpost has no data for this shipment: {err}") from err
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, TimeoutError) as err:
             raise UpdateFailed(f"Error communicating with bpost: {err}") from err
 
         delivered = _is_delivered(item)
