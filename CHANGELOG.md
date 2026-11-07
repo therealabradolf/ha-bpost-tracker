@@ -1,12 +1,15 @@
 # Changelog
 
 All notable changes to this project are documented here. The format follows
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
+[Semantic Versioning](https://semver.org/): a bug fix bumps the patch number,
+a new feature the minor number, and every release gets a git tag.
 
 ## [0.4.0] - 2026-11-07
 
-Security hardening release, based on a review of the integration. Nothing
-critical was found, but several weak spots are closed.
+The first tagged release, and a security hardening release based on a review
+of the integration. Nothing critical was found, but several weak spots are
+closed.
 
 ### Security
 
@@ -44,57 +47,39 @@ critical was found, but several weak spots are closed.
   the field (new `invalid_tracking_number` / `invalid_postal_code` messages,
   English and Dutch). The `add_shipment` service reports all of them.
 
+### Documentation
+
+- The README lists every sensor attribute, points to the `delivered`
+  attribute for detecting delivery (the sensor state is bpost's raw step name,
+  for example `delivered_kariboo_point`), states the minimum Home Assistant
+  version (2024.12) and links this changelog.
+
 ### Upgrade notes
 
 - Scripts or automations that call `bpost_tracker.add_shipment` **as a
   non-admin user** will now fail with a permission error. Automations running
   without a user, and administrators, are unaffected.
 - Restart Home Assistant after updating.
+- Until now Home Assistant and HACS identified the integration by commit hash
+  (for example `10bba07`). From this release on they show the version
+  (`v0.4.0`).
 
-## [0.3.1] - 2026-08-09
+## Before 0.4.0
 
-### Fixed
+The project was built over a few days without releases or tags, so the
+version numbers 0.1.0–0.3.1 that appear in older commits were never
+published and cannot be installed separately. In short, that period added:
 
-- A shipment added after it was already past its "remove after" threshold
-  (for example delivered weeks ago) was deleted before its entities were even
-  created, so it never appeared. It now stays visible until the next refresh.
-
-### Added
-
-- Local brand icon (`brand/icon.png`), so HACS brand validation passes.
-
-### Changed
-
-- Minimum Home Assistant version corrected to 2024.12.
-
-## [0.3.0] - 2026-08-09
-
-### Added
-
-- Shipments can be removed automatically a set number of days after delivery
-  (10 by default, 0 to disable), configurable when adding a shipment and later
-  through the entry's **Configure** button.
-
-## [0.2.1] - 2026-08-09
-
-### Fixed
-
-- hassfest validation: sorted manifest keys and added a `CONFIG_SCHEMA`.
-
-## [0.2.0] - 2026-08-09
-
-### Added
-
-- `bpost_tracker.add_shipment` service, so shipments can be added from a
-  dashboard script instead of the integrations UI.
-
-## [0.1.0] - 2026-08-09
-
-### Added
-
-- Initial release: track any bpost shipment by tracking number and postal
-  code through the public `track.bpost.cloud` API. A status sensor and a
-  safe-place delivery picture camera per shipment, with polling that slows
-  down once a parcel is delivered.
-- Delivery is detected from bpost's actual delivery time rather than the
-  status name, which differs per delivery method.
+- Tracking any bpost shipment by tracking number and postal code through the
+  public `track.bpost.cloud` API, with a status sensor and a safe-place
+  delivery picture camera per shipment.
+- Delivery detection from bpost's actual delivery time, because the status
+  name differs per delivery method.
+- The `bpost_tracker.add_shipment` service, so shipments can be added from a
+  dashboard script.
+- Automatic removal of shipments a configurable number of days after
+  delivery (10 by default, 0 to disable), with an options flow. A shipment
+  that was already past that limit when added used to be deleted before it
+  ever appeared; it now stays visible until the next refresh.
+- hassfest and HACS validation fixes, a local brand icon and a corrected
+  minimum Home Assistant version.
