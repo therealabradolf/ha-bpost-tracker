@@ -22,13 +22,24 @@ risk. If it breaks, please open an issue.
 ## Features
 
 - Add any number of shipments, each becomes its own device.
-- A status sensor per shipment with:
-  - Current status code (e.g. `delivered`, and other bpost step names)
-  - Human-readable status description, in your Home Assistant language
-    (Dutch, French or English — falls back to English)
-  - Sender name
-  - Expected delivery time window, when bpost provides one
-  - Number of stops left on the delivery round, when available
+- A status sensor per shipment. Its state is bpost's raw step name, such as
+  `delivered_kariboo_point` — the exact value differs per delivery method, so
+  don't compare the state to a fixed text to detect delivery. Use the
+  `delivered` attribute for that. The sensor carries these attributes:
+
+  | Attribute | Meaning |
+  | --- | --- |
+  | `delivered` | `true` once bpost has recorded an actual delivery |
+  | `status_label` | Short readable status, e.g. "Picked Up" |
+  | `status_description` | Description of the latest tracking event |
+  | `status_time` | Date and time of that event, e.g. `2026-08-07 11:52` |
+  | `sender` | Sender name, when bpost provides one |
+  | `expected_delivery_from`, `expected_delivery_to` | Expected delivery window, when bpost provides one |
+  | `stops_until_delivery` | Stops left on the delivery round, when available |
+  | `tracking_number`, `postal_code` | What the shipment was added with |
+
+  Labels and descriptions follow your Home Assistant language (Dutch, French
+  or English — falls back to English).
 - A camera entity showing the "safe place" delivery picture, when the
   courier left the parcel without a signature and bpost has a photo for it.
 - Polling slows down automatically (every 6 hours instead of every 15
@@ -39,6 +50,8 @@ risk. If it breaks, please open an issue.
   **Settings → Devices & Services**.
 
 ## Installation
+
+Requires Home Assistant 2024.12 or newer.
 
 ### Via HACS (custom repository)
 
@@ -206,9 +219,14 @@ break the whole card for every shipment.
 ## Known limitations
 
 - bpost's `activeStep` status codes are not officially documented, so the
-  sensor state shows the raw code bpost returns. The `status_description`
-  attribute contains the full, human-readable, localized text.
+  sensor state shows the raw code bpost returns. Use the `delivered`
+  attribute to detect delivery, and `status_label` / `status_description`
+  for readable, localized text.
 - This does **not** cover the "My bpost" app account features (automatic
   mail scans, parcels auto-linked to your account without a tracking
   number). That uses a different, authenticated mobile API that would need
   separate reverse-engineering.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for what changed in each version.
